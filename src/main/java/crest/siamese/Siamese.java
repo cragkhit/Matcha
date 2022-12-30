@@ -19,15 +19,7 @@ package crest.siamese;
 import crest.siamese.document.Document;
 import crest.siamese.document.JavaTerm;
 import crest.siamese.document.Method;
-import crest.siamese.helpers.ESConnector;
-import crest.siamese.helpers.EvalResult;
-import crest.siamese.helpers.Evaluator;
-import crest.siamese.helpers.FileLevelEvaluator;
-import crest.siamese.helpers.LicenseExtractor;
-import crest.siamese.helpers.MethodLevelEvaluator;
-import crest.siamese.helpers.MyUtils;
-import crest.siamese.helpers.OutputFormatter;
-import crest.siamese.helpers.nGramGenerator;
+import crest.siamese.helpers.*;
 import crest.siamese.language.MethodParser;
 import crest.siamese.language.Normalizer;
 import crest.siamese.language.NormalizerMode;
@@ -127,6 +119,7 @@ public class Siamese {
     private String fileLicense = "unknown";
     private boolean licenseFileDetection = false;
     private String computeSimilarity = "none";
+    private boolean isRetrieveLatestResult = true;
     private String[] simThreshold = {"80%", "80%", "80%", "80%"};
     private Tokenizer tokenizer;
     private Tokenizer origTokenizer;
@@ -261,6 +254,7 @@ public class Siamese {
             licenseExtractor = prop.getProperty("licenseExtractor");
             licenseFileDetection = Boolean.parseBoolean(prop.getProperty("licenseFileDetection"));
             computeSimilarity = prop.getProperty("computeSimilarity");
+            isRetrieveLatestResult = Boolean.parseBoolean(prop.getProperty("isRetrieveLatestResult"));
             String simThresholds = prop.getProperty("simThreshold");
             simThreshold = simThresholds.split(",");
             if (command.equals("delete")) {
@@ -842,6 +836,10 @@ public class Siamese {
                                 } else {
                                     System.out.println("QUERY: " + methodCount + "\n" + origQuery);
                                     results = es.search(index, type, origQuery, isPrint, isDFS, offset, size);
+                                }
+                                if(this.isRetrieveLatestResult && this.computeSimilarity.equals("none")){
+                                    LatestResultVersionRetriever lr = new LatestResultVersionRetriever(results);
+                                    results = lr.RetrieveLatestResult();
                                 }
                                 // fuzzywuzzy similarity is applied after the search
                                 if (this.computeSimilarity.equals("fuzzywuzzy")) {
