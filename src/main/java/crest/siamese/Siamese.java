@@ -777,7 +777,7 @@ public class Siamese {
                             boolean matchFound = boilerPlateCodeFilter.Filter(method.getName());
 
                             // matchFound = true; skip search this method
-                            if(!matchFound) {
+                            if (!matchFound) {
                                 // check minimum size
                                 if ((method.getEndLine() - method.getStartLine() + 1) >= minCloneLine) {
                                     // write output to file
@@ -836,7 +836,6 @@ public class Siamese {
                                                     origTokenizer, false, ngen);
                                         }
                                     }
-
                                     // search for results depending on the MR setting
                                     if (this.multiRep) {
                                         results = es.search(index, type, origQuery, t3Query, t2Query, t1Query,
@@ -845,6 +844,10 @@ public class Siamese {
                                     } else {
                                         System.out.println("QUERY: " + methodCount + "\n" + origQuery);
                                         results = es.search(index, type, origQuery, isPrint, isDFS, offset, size);
+                                    }
+                                    if (this.isRetrieveLatestResult && this.computeSimilarity.equals("none")) {
+                                        LatestResultVersionRetriever lr = new LatestResultVersionRetriever(results);
+                                        results = lr.RetrieveLatestResult();
                                     }
                                     // fuzzywuzzy similarity is applied after the search
                                     if (this.computeSimilarity.equals("fuzzywuzzy")) {
@@ -859,40 +862,7 @@ public class Siamese {
                                                 ignoreQueryClones, q, queryText));
                                     }
                                     search++;
-                                } else {
-                                    if (isPrint) {
-                                        System.out.println("Not searched (smaller than the threshold of " +
-                                                minCloneLine + " lines): " + method.getFullyQualifiedMethodName() +
-                                                ": " + method.getFile());
-                                    }
                                 }
-
-                                // search for results depending on the MR setting
-                                if (this.multiRep) {
-                                    results = es.search(index, type, origQuery, t3Query, t2Query, t1Query,
-                                            origBoost, normBoost, t2Boost, t1Boost, isPrint, isDFS, offset,
-                                            size, this.computeSimilarity, simThreshold);
-                                } else {
-                                    System.out.println("QUERY: " + methodCount + "\n" + origQuery);
-                                    results = es.search(index, type, origQuery, isPrint, isDFS, offset, size);
-                                }
-                                if(this.isRetrieveLatestResult && this.computeSimilarity.equals("none")){
-                                    LatestResultVersionRetriever lr = new LatestResultVersionRetriever(results);
-                                    results = lr.RetrieveLatestResult();
-                                }
-                                // fuzzywuzzy similarity is applied after the search
-                                if (this.computeSimilarity.equals("fuzzywuzzy")) {
-//                                    int[] sim = computeSimilarityOneRep(origQuery, results);
-//                                    outToFile.append(formatter.format(results, sim, this.simThreshold, prefixToRemove));
-                                    // TODO: only for the thesis, put this back after the experiment.
-                                    int[][] sim = computeSimilarity(origQuery, t1Query, t2Query, t3Query, results);
-                                    outToFile.append(formatter.format(results, sim, this.simThreshold,
-                                            prefixToRemove, ignoreQueryClones, q, queryText));
-                                } else {
-                                    outToFile.append(formatter.format(results, prefixToRemove,
-                                            ignoreQueryClones, q, queryText));
-                                }
-                                search++;
                             } else {
                                 if (isPrint) {
                                     System.out.println("Not searched (smaller than the threshold of " +
