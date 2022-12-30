@@ -67,6 +67,7 @@ public class Siamese {
     private String type;
     private String inputFolder;
     private String outputFolder;
+    private String boilerplateCodePatternFile;
     private String subInputFolder;
     private String normalizerModeName;
     private String t2NormMode;
@@ -170,6 +171,7 @@ public class Siamese {
             inputFolder = prop.getProperty("inputFolder");
             subInputFolder = prop.getProperty("subInputFolder");
             outputFolder = prop.getProperty("outputFolder");
+            boilerplateCodePatternFile = prop.getProperty("boilerplateCodePatternFile");
 
             normalizerModeName = prop.getProperty("normalizerMode");
             t2NormMode = prop.getProperty("t2NormMode");
@@ -769,91 +771,98 @@ public class Siamese {
                     if (methodList.size() > 0) {
                         for (Method method : methodList) {
                             methodCount++;
-                            // check minimum size
-                            if ((method.getEndLine() - method.getStartLine() + 1) >= minCloneLine) {
-                                // write output to file
-                                Document q = new Document();
-                                q.setFile(method.getFile() + "_" + method.getName());
-                                q.setStartline(method.getStartLine());
-                                q.setEndline(method.getEndLine());
-                                String queryText = formatter.format(q, prefixToRemove, license);
 
-                                // t3Query size limit is enforced
-                                if (queryReduction) {
-                                    long docCount = getIndicesStats();
-                                    if (enableRep[3]) {
-                                        t3Query = reduceQuery(tokenizeAsArray(method.getSrc(),
-                                                tokenizer, isNgram, ngen),
-                                                "src", this.qrPercentileNorm * docCount / 100);
-                                    }
-                                    if (enableRep[2]) {
-                                        t2Query = reduceQuery(tokenizeAsArray(method.getSrc(),
-                                                t2Tokenizer, isNgram, t2Ngen),
-                                                "t2src", this.qrPercentileT2 * docCount / 100);
-                                    }
-                                    if (enableRep[1]) {
-                                        t1Query = reduceQuery(tokenizeAsArray(method.getSrc(),
-                                                t1Tokenizer, isNgram, t1Ngen),
-                                                "t1src", this.qrPercentileT1 * docCount / 100);
-                                    }
-                                    if (enableRep[0]) {
-                                        origQuery = reduceQuery(tokenizeAsArray(method.getComment() +
-                                                        " " + method.getSrc(), origTokenizer, false, ngen),
-                                                "tokenizedsrc", this.qrPercentileOrig * docCount / 100);
-                                    }
-                                    if (isPrint) {
-                                        System.out.println(methodCount + " T3Q " +
-                                                this.qrPercentileNorm * docCount / 100 + "," + t3Query + "\n");
-                                        System.out.println(methodCount + " T2Q " +
-                                                this.qrPercentileT2 * docCount / 100 + "," + t2Query + "\n");
-                                        System.out.println(methodCount + " T1Q " +
-                                                this.qrPercentileT1 * docCount / 100 + "," + t1Query + "\n");
-                                        System.out.println(methodCount + " T0Q " +
-                                                this.qrPercentileOrig * docCount / 100 + "," + origQuery);
-                                        System.out.println("-------------------------------------------");
-                                    }
-                                } else {
-                                    if (enableRep[3]) {
-                                        t3Query = tokenize(method.getSrc(), tokenizer, isNgram, ngen);
-                                    }
-                                    if (enableRep[2]) {
-                                        t2Query = tokenize(method.getSrc(), t2Tokenizer, isNgram, t2Ngen);
-                                    }
-                                    if (enableRep[1]) {
-                                        t1Query = tokenize(method.getSrc(), t1Tokenizer, isNgram, t1Ngen);
-                                    }
-                                    if (enableRep[0]) {
-                                        origQuery = tokenize(method.getComment() + " " + method.getSrc(),
-                                                origTokenizer, false, ngen);
-                                    }
-                                }
+                            // boilerPlate code filter
+                            BoilerPlateCodeFilter boilerPlateCodeFilter = new BoilerPlateCodeFilter(boilerplateCodePatternFile);
+                            boolean matchFound = boilerPlateCodeFilter.Filter(method.getName());
 
-                                // search for results depending on the MR setting
-                                if (this.multiRep) {
-                                    results = es.search(index, type, origQuery, t3Query, t2Query, t1Query,
-                                            origBoost, normBoost, t2Boost, t1Boost, isPrint, isDFS, offset,
-                                            size, this.computeSimilarity, simThreshold);
-                                } else {
-                                    System.out.println("QUERY: " + methodCount + "\n" + origQuery);
-                                    results = es.search(index, type, origQuery, isPrint, isDFS, offset, size);
-                                }
-                                if(this.isRetrieveLatestResult && this.computeSimilarity.equals("none")){
-                                    LatestResultVersionRetriever lr = new LatestResultVersionRetriever(results);
-                                    results = lr.RetrieveLatestResult();
-                                }
-                                // fuzzywuzzy similarity is applied after the search
-                                if (this.computeSimilarity.equals("fuzzywuzzy")) {
+                            // matchFound = true; skip search this method
+                            if (!matchFound) {
+                                // check minimum size
+                                if ((method.getEndLine() - method.getStartLine() + 1) >= minCloneLine) {
+                                    // write output to file
+                                    Document q = new Document();
+                                    q.setFile(method.getFile() + "_" + method.getName());
+                                    q.setStartline(method.getStartLine());
+                                    q.setEndline(method.getEndLine());
+                                    String queryText = formatter.format(q, prefixToRemove, license);
+
+                                    // t3Query size limit is enforced
+                                    if (queryReduction) {
+                                        long docCount = getIndicesStats();
+                                        if (enableRep[3]) {
+                                            t3Query = reduceQuery(tokenizeAsArray(method.getSrc(),
+                                                            tokenizer, isNgram, ngen),
+                                                    "src", this.qrPercentileNorm * docCount / 100);
+                                        }
+                                        if (enableRep[2]) {
+                                            t2Query = reduceQuery(tokenizeAsArray(method.getSrc(),
+                                                            t2Tokenizer, isNgram, t2Ngen),
+                                                    "t2src", this.qrPercentileT2 * docCount / 100);
+                                        }
+                                        if (enableRep[1]) {
+                                            t1Query = reduceQuery(tokenizeAsArray(method.getSrc(),
+                                                            t1Tokenizer, isNgram, t1Ngen),
+                                                    "t1src", this.qrPercentileT1 * docCount / 100);
+                                        }
+                                        if (enableRep[0]) {
+                                            origQuery = reduceQuery(tokenizeAsArray(method.getComment() +
+                                                            " " + method.getSrc(), origTokenizer, false, ngen),
+                                                    "tokenizedsrc", this.qrPercentileOrig * docCount / 100);
+                                        }
+                                        if (isPrint) {
+                                            System.out.println(methodCount + " T3Q " +
+                                                    this.qrPercentileNorm * docCount / 100 + "," + t3Query + "\n");
+                                            System.out.println(methodCount + " T2Q " +
+                                                    this.qrPercentileT2 * docCount / 100 + "," + t2Query + "\n");
+                                            System.out.println(methodCount + " T1Q " +
+                                                    this.qrPercentileT1 * docCount / 100 + "," + t1Query + "\n");
+                                            System.out.println(methodCount + " T0Q " +
+                                                    this.qrPercentileOrig * docCount / 100 + "," + origQuery);
+                                            System.out.println("-------------------------------------------");
+                                        }
+                                    } else {
+                                        if (enableRep[3]) {
+                                            t3Query = tokenize(method.getSrc(), tokenizer, isNgram, ngen);
+                                        }
+                                        if (enableRep[2]) {
+                                            t2Query = tokenize(method.getSrc(), t2Tokenizer, isNgram, t2Ngen);
+                                        }
+                                        if (enableRep[1]) {
+                                            t1Query = tokenize(method.getSrc(), t1Tokenizer, isNgram, t1Ngen);
+                                        }
+                                        if (enableRep[0]) {
+                                            origQuery = tokenize(method.getComment() + " " + method.getSrc(),
+                                                    origTokenizer, false, ngen);
+                                        }
+                                    }
+                                    // search for results depending on the MR setting
+                                    if (this.multiRep) {
+                                        results = es.search(index, type, origQuery, t3Query, t2Query, t1Query,
+                                                origBoost, normBoost, t2Boost, t1Boost, isPrint, isDFS, offset,
+                                                size, this.computeSimilarity, simThreshold);
+                                    } else {
+                                        System.out.println("QUERY: " + methodCount + "\n" + origQuery);
+                                        results = es.search(index, type, origQuery, isPrint, isDFS, offset, size);
+                                    }
+                                    if (this.isRetrieveLatestResult && this.computeSimilarity.equals("none")) {
+                                        LatestResultVersionRetriever lr = new LatestResultVersionRetriever(results);
+                                        results = lr.RetrieveLatestResult();
+                                    }
+                                    // fuzzywuzzy similarity is applied after the search
+                                    if (this.computeSimilarity.equals("fuzzywuzzy")) {
 //                                    int[] sim = computeSimilarityOneRep(origQuery, results);
 //                                    outToFile.append(formatter.format(results, sim, this.simThreshold, prefixToRemove));
-                                    // TODO: only for the thesis, put this back after the experiment.
-                                    int[][] sim = computeSimilarity(origQuery, t1Query, t2Query, t3Query, results);
-                                    outToFile.append(formatter.format(results, sim, this.simThreshold,
-                                            prefixToRemove, ignoreQueryClones, q, queryText));
-                                } else {
-                                    outToFile.append(formatter.format(results, prefixToRemove,
-                                            ignoreQueryClones, q, queryText));
+                                        // TODO: only for the thesis, put this back after the experiment.
+                                        int[][] sim = computeSimilarity(origQuery, t1Query, t2Query, t3Query, results);
+                                        outToFile.append(formatter.format(results, sim, this.simThreshold,
+                                                prefixToRemove, ignoreQueryClones, q, queryText));
+                                    } else {
+                                        outToFile.append(formatter.format(results, prefixToRemove,
+                                                ignoreQueryClones, q, queryText));
+                                    }
+                                    search++;
                                 }
-                                search++;
                             } else {
                                 if (isPrint) {
                                     System.out.println("Not searched (smaller than the threshold of " +
