@@ -1,7 +1,6 @@
 package crest.siamese.helpers;
 
 import crest.siamese.document.Document;
-import io.github.danielnaczo.python3parser.model.expr.atoms.Str;
 
 import javax.print.Doc;
 import java.util.ArrayList;
