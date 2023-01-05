@@ -1,6 +1,10 @@
 # Matcha: Recommending Code Improvements Based on Stack Overflow Answer Edits
 This repo contains the implementation of Matcha based on the infrastructure of Siamese.
 
+Below is the old README from Siamese. Matcha's README will be added soon.
+
+---------
+
 # Siamese: Code Clone Search Engine
 
 ![Siamese logo](Logo.png "Siamese logo")
