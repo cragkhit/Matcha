@@ -1,0 +1,5 @@
+^toString()$
+^compareTo()$
+^equals()$
+^set
+^get
