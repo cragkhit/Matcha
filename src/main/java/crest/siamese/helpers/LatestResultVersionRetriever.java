@@ -2,7 +2,6 @@ package crest.siamese.helpers;
 
 import crest.siamese.document.Document;
 
-import javax.print.Doc;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +22,7 @@ public class LatestResultVersionRetriever {
         String fileNameWithOutVersion = String.join("_", RemoveArrayByIndex(fileNames,fileNames.length-1));
         String fileVersion = fileNames[fileNames.length-1];
         if(fileVersion.equals("recent")){
-            result.add(esResults.get(0));
+//            result.add(esResults.get(0));
             return result;
         }
         String newestVersion = fileVersion;
@@ -60,7 +59,7 @@ public class LatestResultVersionRetriever {
                             numberVersion = 0;
                         }
                     }
-                    if(numberVersion >= newestNumberVersion){
+                    if(numberVersion > newestNumberVersion){
                         result = new ArrayList<>();
                         result.add(esResult);
                         newestVersion = version;
