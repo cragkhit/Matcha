@@ -2,7 +2,6 @@ package crest.siamese.helpers;
 
 import crest.siamese.document.Document;
 
-import javax.print.Doc;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,11 +21,21 @@ public class LatestResultVersionRetriever {
         String[] fileNames = fileName.split("_");
         String fileNameWithOutVersion = String.join("_", RemoveArrayByIndex(fileNames,fileNames.length-1));
         String fileVersion = fileNames[fileNames.length-1];
-        if(fileVersion.equals("latest")){
-            result.add(esResults.get(0));
+        if(fileVersion.equals("recent")){
+//            result.add(esResults.get(0));
             return result;
         }
         String newestVersion = fileVersion;
+        int newestNumberVersion = 0;
+        if(newestVersion.equals("original")){
+            newestNumberVersion = 0;
+        }else{
+            try {
+                newestNumberVersion = Integer.parseInt(newestVersion);
+            }catch (Exception e){
+                newestNumberVersion = 0;
+            }
+        }
         for (Document esResult : esResults) {
             String[] paths = esResult.getFile().split("/");
             String path = paths[paths.length-1];
@@ -34,15 +43,28 @@ public class LatestResultVersionRetriever {
             String[] names = name.split("_");
             String nameWithOutVersion = String.join("_", RemoveArrayByIndex(names,names.length-1));
             String version = names[names.length-1];
+            int numberVersion;
             if(fileNameWithOutVersion.equals(nameWithOutVersion)){
-                if(version.equals("latest")){
+                if(version.equals("recent")){
                     result = new ArrayList<>();
                     result.add(esResult);
                     return result;
-                }else if(Integer.parseInt(version) >= Integer.parseInt(newestVersion)){
-                    result = new ArrayList<>();
-                    result.add(esResult);
-                    newestVersion = version;
+                }else {
+                    if (version.equals("original")){
+                        numberVersion = 0;
+                    }else {
+                        try {
+                            numberVersion = Integer.parseInt(version);
+                        }catch (Exception e){
+                            numberVersion = 0;
+                        }
+                    }
+                    if(numberVersion > newestNumberVersion){
+                        result = new ArrayList<>();
+                        result.add(esResult);
+                        newestVersion = version;
+                        newestNumberVersion = numberVersion;
+                    }
                 }
             }
         }
