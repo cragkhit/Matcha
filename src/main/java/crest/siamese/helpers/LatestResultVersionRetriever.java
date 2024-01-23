@@ -62,11 +62,15 @@ public class LatestResultVersionRetriever {
                     if(numberVersion > newestNumberVersion){
                         result = new ArrayList<>();
                         result.add(esResult);
+
                         newestVersion = version;
                         newestNumberVersion = numberVersion;
                     }
                 }
             }
+        }
+        if(newestNumberVersion == 0 ){
+            result = new ArrayList<Document>();
         }
         return result;
     }
