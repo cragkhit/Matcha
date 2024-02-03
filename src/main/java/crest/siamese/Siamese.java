@@ -845,7 +845,7 @@ public class Siamese {
                                         System.out.println("QUERY: " + methodCount + "\n" + origQuery);
                                         results = es.search(index, type, origQuery, isPrint, isDFS, offset, size);
                                     }
-                                    if (this.isRetrieveLatestResult) {
+                                    if (this.isRetrieveLatestResult && !results.isEmpty()) {
                                         LatestResultVersionRetriever lr = new LatestResultVersionRetriever(results);
                                         results = lr.RetrieveLatestResult();
                                     }
