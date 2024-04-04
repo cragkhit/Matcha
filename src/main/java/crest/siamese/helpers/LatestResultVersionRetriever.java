@@ -22,7 +22,6 @@ public class LatestResultVersionRetriever {
         String fileNameWithOutVersion = String.join("_", RemoveArrayByIndex(fileNames,fileNames.length-1));
         String fileVersion = fileNames[fileNames.length-1];
         if(fileVersion.equals("recent")){
-//            result.add(esResults.get(0));
             return result;
         }
         String newestVersion = fileVersion;
