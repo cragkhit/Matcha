@@ -779,7 +779,8 @@ public class Siamese {
                             // matchFound = true; skip search this method
                             if (!matchFound) {
                                 // check minimum size
-                                String[] commentLines = method.getComment().split("\\*/");
+                                String comments = method.getComment().replace("*/", "\n"); //support case one line comment
+                                String[] commentLines = comments.split("\n");
                                 if (((method.getEndLine() - method.getStartLine() + 1) - commentLines.length) >= minCloneLine) {
                                     // write output to file
                                     Document q = new Document();
