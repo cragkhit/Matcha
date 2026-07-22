@@ -49,6 +49,9 @@ public class Main {
 					"./elasticsearch-2.2.0/bin/elasticsearch -d");
 		} catch (Exception e) {
             System.out.println(e.getMessage());
+		} catch (Throwable t) {
+            System.out.println("FATAL (uncaught): " + t);
+            t.printStackTrace();
 		}
 
 		siamese.shutdown();

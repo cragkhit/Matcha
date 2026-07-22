@@ -3,3 +3,11 @@
 ^equals()$
 ^set
 ^get
+^compare()$
+^hashCode()$
+on[A-Z]*
+execute
+configure
+propertyChange
+actionPerformed
+sync

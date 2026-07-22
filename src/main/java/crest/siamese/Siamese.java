@@ -658,7 +658,7 @@ public class Siamese {
                             }
                         }
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     System.out.println("ERROR: error while extracting methods.");
                     e.printStackTrace();
                 }
@@ -693,7 +693,7 @@ public class Siamese {
                     System.out.println("Indexed " + fileCount
                             + " [" + df.format(percent) + "%] documents/files (" + count + " methods).");
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 System.out.println("ERROR: error while indexing a file: " + file.getAbsolutePath() + ". Skip.");
             }
         }
