@@ -56,7 +56,8 @@ elasticsearch-2.2.0-small
 # System Files
 .DS_Store
 Thumbs.db
-**/.DS_Storeindex_python_files.log
+**/.DS_Store
+index_python_files.log
 search_all_repos.log
 *.pyc
 __pycache__/

@@ -16,12 +16,20 @@ cd "$MATCHA_DIR"
 
 total=$(find "$REPOS_DIR" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
 count=0
+start_epoch=$(date +%s)
 
 echo "=== Starting search over $total repos at $(date) ===" | tee -a "$LOG_FILE"
 
 for repo_path in "$REPOS_DIR"/*/; do
   repo_name=$(basename "$repo_path")
   count=$((count + 1))
+
+  # resume support: skip repos that already have a saved result file
+  if compgen -G "$OUTPUT_DIR/${repo_name}_*" > /dev/null; then
+    echo "[$count/$total] $(date '+%H:%M:%S') Skipping $repo_name (already has a result file)" | tee -a "$LOG_FILE"
+    continue
+  fi
+
   echo "[$count/$total] $(date '+%H:%M:%S') Searching with repo: $repo_name" | tee -a "$LOG_FILE"
 
   before=$(ls -1 "$OUTPUT_DIR" 2>/dev/null | sort)
@@ -42,4 +50,8 @@ for repo_path in "$REPOS_DIR"/*/; do
   fi
 done
 
-echo "=== Done. Processed $count/$total repos at $(date) ===" | tee -a "$LOG_FILE"
+end_epoch=$(date +%s)
+elapsed=$((end_epoch - start_epoch))
+printf -v elapsed_hms '%02d:%02d:%02d' $((elapsed/3600)) $((elapsed%3600/60)) $((elapsed%60))
+
+echo "=== Done. Processed $count/$total repos at $(date) (elapsed: $elapsed_hms) ===" | tee -a "$LOG_FILE"
