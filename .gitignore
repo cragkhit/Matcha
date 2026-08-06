@@ -58,6 +58,9 @@ elasticsearch-2.2.0-small
 Thumbs.db
 **/.DS_Store
 index_python_files.log
+index_javascript_files*.log
 search_all_repos*.log
+matcha-*.jar
+search_results/
 *.pyc
 __pycache__/
