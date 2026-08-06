@@ -68,6 +68,12 @@ public class Siamese {
     private String inputFolder;
     private String outputFolder;
     private String boilerplateCodePatternFile;
+    // optional: absolute path of every file the indexer finishes processing (success or parse
+    // failure) is appended here, one per line, so a killed/interrupted run can be resumed against
+    // only the files that were never reached, instead of re-scanning the whole input folder.
+    // Left unset (null) by default; existing config files without this property are unaffected.
+    private String processedFilesLog;
+    private ProcessedFilesTracker processedFilesTracker;
     private String subInputFolder;
     private String normalizerModeName;
     private String t2NormMode;
@@ -172,6 +178,7 @@ public class Siamese {
             subInputFolder = prop.getProperty("subInputFolder");
             outputFolder = prop.getProperty("outputFolder");
             boilerplateCodePatternFile = prop.getProperty("boilerplateCodePatternFile");
+            processedFilesLog = prop.getProperty("processedFilesLog");
 
             normalizerModeName = prop.getProperty("normalizerMode");
             t2NormMode = prop.getProperty("t2NormMode");
@@ -582,6 +589,7 @@ public class Siamese {
         if (this.includeLicense) {
             this.fileLicense = extractProjectLicense();
         }
+        processedFilesTracker = new ProcessedFilesTracker(processedFilesLog);
         for (File file : listOfFiles) {
             try {
                 String license = "none";
@@ -693,10 +701,12 @@ public class Siamese {
                     System.out.println("Indexed " + fileCount
                             + " [" + df.format(percent) + "%] documents/files (" + count + " methods).");
                 }
+                processedFilesTracker.recordProcessed(filePath);
             } catch (Throwable e) {
                 System.out.println("ERROR: error while indexing a file: " + file.getAbsolutePath() + ". Skip.");
             }
         }
+        processedFilesTracker.close();
         // the last batch
         if (this.indexingMode.equals(Settings.IndexingMode.BULK) && docArray.size() != 0) {
             isIndexed = es.bulkInsert(index, type, docArray);

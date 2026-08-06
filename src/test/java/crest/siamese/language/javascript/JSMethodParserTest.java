@@ -6,6 +6,7 @@ import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -118,6 +119,22 @@ public class JSMethodParserTest {
         assertNull(jsMethodParser.getLicense());
         JSMethodParser jsmp = new JSMethodParser(StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY, false);
         assertNull(jsmp.getLicense());
+    }
+
+    /**
+     * getParsedTree() bounds each parse with PARSE_TIMEOUT_MS (see TimeoutRunnerTest for the
+     * timeout/forcible-stop mechanism itself) so a single pathological file can't hang an entire
+     * indexing run. Guard the constant's value so it can't silently regress to something absurd
+     * (e.g. 0, or hours long) without a test failing.
+     */
+    @Test
+    public void parseTimeoutIsConfiguredToASaneBoundedValue() throws NoSuchFieldException, IllegalAccessException {
+        Field field = JSMethodParser.class.getDeclaredField("PARSE_TIMEOUT_MS");
+        field.setAccessible(true);
+        long timeoutMs = field.getLong(null);
+        assertTrue("PARSE_TIMEOUT_MS must be positive", timeoutMs > 0);
+        assertTrue("PARSE_TIMEOUT_MS must stay well under a minute or a single bad file "
+                + "could still dominate an indexing run", timeoutMs <= 60_000);
     }
 
 }

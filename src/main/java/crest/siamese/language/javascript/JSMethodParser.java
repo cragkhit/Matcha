@@ -18,6 +18,7 @@
 package crest.siamese.language.javascript;
 
 import crest.siamese.document.Method;
+import crest.siamese.helpers.TimeoutRunner;
 import crest.siamese.language.MethodParser;
 import crest.siamese.settings.Settings;
 import org.antlr.v4.runtime.CharStream;
@@ -35,6 +36,14 @@ import java.util.ArrayList;
  * This class responsible for extracting all the JavaScript function block as Method objects
  */
 public class JSMethodParser implements MethodParser {
+
+    /**
+     * Some inputs (e.g. HTML documents saved with a .js extension) trigger catastrophic
+     * ambiguity in the ANTLR grammar's htmlElement/htmlContent rules, hanging the parser
+     * indefinitely regardless of prediction mode. Bound each file's parse time and abandon
+     * it as unparseable rather than let one bad file stall the whole indexing run.
+     */
+    private static final long PARSE_TIMEOUT_MS = 15000;
 
     private String FILE_PATH;
     private String MODE;
@@ -126,10 +135,22 @@ public class JSMethodParser implements MethodParser {
 
     protected ParseTree getParsedTree(File sourceFile) {
         JavaScriptParser parser = getJavaScriptParser(sourceFile);
-        try {
-            return parser.program();
-        } catch (RuntimeException e) {
-            System.out.println(e.getMessage());
+        final ParseTree[] result = new ParseTree[1];
+        final Throwable[] error = new Throwable[1];
+        boolean completed = TimeoutRunner.run(() -> {
+            try {
+                result[0] = parser.program();
+            } catch (Throwable t) {
+                error[0] = t;
+            }
+        }, PARSE_TIMEOUT_MS);
+        if (!completed) {
+            System.out.println("ERROR: parsing timed out after " + PARSE_TIMEOUT_MS
+                    + "ms (likely catastrophic ANTLR ambiguity), aborting: " + sourceFile.getPath());
+        } else if (result[0] != null) {
+            return result[0];
+        } else if (error[0] != null) {
+            System.out.println(error[0].getMessage());
         }
         return getJavaScriptParser(new File("empty.js")).program();
     }

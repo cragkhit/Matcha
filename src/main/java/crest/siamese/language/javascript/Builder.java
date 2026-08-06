@@ -20,6 +20,7 @@ package crest.siamese.language.javascript;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.atn.PredictionMode;
 
 
 /**
@@ -56,6 +57,7 @@ public final class Builder {
             this.parser = new JavaScriptParser(new CommonTokenStream(lexer));
             this.parser.removeErrorListeners();
             this.parser.addErrorListener(ERROR_LISTENER);
+            this.parser.getInterpreter().setPredictionMode(PredictionMode.SLL);
         }
 
         /**
@@ -67,6 +69,7 @@ public final class Builder {
             this.parser = new JavaScriptParser(new CommonTokenStream(lexer));
             this.parser.removeErrorListeners();
             this.parser.addErrorListener(ERROR_LISTENER);
+            this.parser.getInterpreter().setPredictionMode(PredictionMode.SLL);
         }
 
         /**
