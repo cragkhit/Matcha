@@ -59,6 +59,9 @@ Thumbs.db
 **/.DS_Store
 index_python_files.log
 index_javascript_files*.log
+index_javascript_split_*.log
+run_javascript_splits.log
+processed_javascript_files*.txt
 search_all_repos*.log
 matcha-*.jar
 search_results/
