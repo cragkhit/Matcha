@@ -3,9 +3,10 @@
 # search using it as the query input, and saves the resulting output file
 # named <repo>_<timestamp>.<ext>.
 #
-# Usage: ./search_all_repos.sh [repos_dir] [config_file]
+# Usage: ./search_all_repos.sh [repos_dir] [config_file] [output_dir]
 #   repos_dir defaults to python_repos_100 if omitted.
 #   config_file defaults to config_python.properties if omitted.
+#   output_dir defaults to search_results if omitted.
 set -uo pipefail
 
 MATCHA_DIR="/Users/chaiyong/Downloads/matcha/1_matcha"
@@ -13,7 +14,7 @@ JAVA_BIN="/Library/Java/JavaVirtualMachines/temurin-8.jdk/Contents/Home/bin/java
 JAR="matcha-0.1.0.jar"
 CONFIG="${2:-config_python.properties}"
 REPOS_DIR="${1:-/Users/chaiyong/Downloads/matcha/python_repos_100}"
-OUTPUT_DIR="$MATCHA_DIR/search_results"
+OUTPUT_DIR="${3:-$MATCHA_DIR/search_results}"
 LOG_FILE="$MATCHA_DIR/search_all_repos_$(basename "$REPOS_DIR").log"
 
 mkdir -p "$OUTPUT_DIR"
